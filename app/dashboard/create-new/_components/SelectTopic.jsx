@@ -9,35 +9,45 @@ import {
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 
+function SelectTopic({ onUserSelect }) {
+  const options = [
+    'custom prompt', 'Random AI Stories', 'Scary Story'
+  ];
 
-
-function SelectTopic() {
-const options = [
-  'custom prompts', 'Random AI Stoys', 'Scary story'
-]
-
-const [selectedOption, setSelectedOption] = useState();
+  const [selectedOption, setSelectedOption] = useState(""); 
 
   return (
     <div>
       <h2 className='font-bold text-xl text-primary'>Content</h2>
       <p className='text-gray-600'>What's the topic of your video</p>
-      <Select onValueChange={(value)=>setSelectedOption(value)}>
+      
+      {/* Dropdown for topic selection */}
+      <Select onValueChange={(value) => {
+        setSelectedOption(value);
+        if (value !== 'custom prompt') {
+          onUserSelect('topic', value); 
+        }
+      }}>
         <SelectTrigger className="w-full mt-2 p-6 text-lg">
           <SelectValue placeholder="Content Type" />
         </SelectTrigger>
         <SelectContent>
-          {options.map((item, index)=>(
+          {options.map((item, index) => (
             <SelectItem key={index} value={item}>{item}</SelectItem>
           ))}
         </SelectContent>
       </Select>
-          {selectedOption=='custom prompts'&&
 
-          <Textarea className="mt-3" placeholder="Write your Own prompt"/>
-}
+      {/* textarea for "custom prompt"*/}
+      {selectedOption === 'custom prompt' && (
+        <Textarea 
+          onChange={(e) => onUserSelect('topic', e.target.value)} 
+          className="mt-3" 
+          placeholder="Write your own prompt"
+        />
+      )}
     </div>
-  )
+  );
 }
 
-export default SelectTopic
+export default SelectTopic;
