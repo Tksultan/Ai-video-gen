@@ -9,7 +9,7 @@ function Dashboard() {
 
   return (
     <div>
-      <div className='flex justify-between items-center'>
+      <div className='mt-16 flex justify-between items-center'>
         <h2 className='font-bold text-2xl text-primary'>Dashboard</h2>
         <Link href={'/dashboard/create-new'}>
           <Button>+ Create new</Button>
