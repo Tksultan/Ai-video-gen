@@ -11,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea"
 
 function SelectTopic({ onUserSelect }) {
   const options = [
-    'custom prompt', 'Random AI Stories', 'Scary Story'
+    'Custom prompt', 'Random AI Stories', 'Scary Story'
   ];
 
   const [selectedOption, setSelectedOption] = useState(""); 
@@ -24,7 +24,7 @@ function SelectTopic({ onUserSelect }) {
       {/* Dropdown for topic selection */}
       <Select onValueChange={(value) => {
         setSelectedOption(value);
-        if (value !== 'custom prompt') {
+        if (value !== 'Custom prompt') {
           onUserSelect('topic', value); 
         }
       }}>
@@ -39,7 +39,7 @@ function SelectTopic({ onUserSelect }) {
       </Select>
 
       {/* textarea for "custom prompt"*/}
-      {selectedOption === 'custom prompt' && (
+      {selectedOption === 'Custom prompt' && (
         <Textarea 
           onChange={(e) => onUserSelect('topic', e.target.value)} 
           className="mt-3" 

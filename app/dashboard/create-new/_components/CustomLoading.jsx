@@ -13,8 +13,8 @@ import {
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import Image from 'next/image';
 
-function CustomLoading({ loading, setLoading }) {
-  if (!loading) return null; // Show only if loading is true
+function CustomLoading({ loading, setLoading, status }) {
+  if (!loading) return null;
 
   return (
     <AlertDialog open={loading}>
@@ -27,7 +27,8 @@ function CustomLoading({ loading, setLoading }) {
         </AlertDialogHeader>
         <div className="bg-white flex flex-col items-center justify-center gap-2 p-4">
           <Image src={'/loading.gif'} width={100} height={100} alt="Loading..." />
-          <p className="mt-2 text-center">Generating your video... Don't refresh</p>
+          <p className="mt-2 text-center">{status+'...'}</p>
+          <p className="mt-2 text-center">Work in progress. Don't refresh</p>
         
         <AlertDialogFooter >
           <AlertDialogCancel onClick={() => setLoading(false)}>
