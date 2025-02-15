@@ -1,3 +1,3 @@
 import { createContext } from "react";
 
-export const VideoDataContext = createContext(null); 
+export const VideoDataContext = createContext(); 

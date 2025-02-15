@@ -1,5 +1,5 @@
 "use client"
-import React, { useState } from 'react'
+import React, { useContext, useEffect, useState } from 'react'
 import SelectTopic from './_components/SelectTopic.jsx'
 import SelectStyle from './_components/SelectStyle.jsx';
 import SelectDuration from './_components/SelectDuration.jsx';
@@ -7,6 +7,10 @@ import { Button } from '@/components/ui/button.jsx';
 import axios from 'axios';
 import CustomLoading from './_components/CustomLoading.jsx';
 import { v4 as uuidv4 } from 'uuid';
+import { VideoDataContext } from '@/app/_context/videoDataContext.jsx';
+import { useUser } from '@clerk/nextjs';
+import { db } from '@/configs/db.js';
+import { DbVideoData } from '@/configs/schema.js';
 
 
 function CreateNewVideo() {
@@ -19,9 +23,12 @@ function CreateNewVideo() {
 
   const [videoScript, setVideoScript] = useState([]);
 
+  const { videoData, setVideoData } = useContext(VideoDataContext);
+  const { user } = useUser();
+
   const [audioFileUrl, setAudioFileUrl] = useState();
 
-  const [captions, setCaptions] = useState();
+  const [captions, setCaptions] = useState([]);
 
   const [imageList, setImageList] = useState();
 
@@ -49,7 +56,10 @@ function CreateNewVideo() {
     const result = await axios.post('/api/get-video-script', {
       prompt: prompt
     }).then(resp => {
-      console.log(resp.data);
+      setVideoData(prev => ({
+        ...prev,
+        'videoScript': resp.data.result
+      }))
       setVideoScript(resp.data.result);
       GenrateAudio(resp.data.result);
     })
@@ -66,6 +76,10 @@ function CreateNewVideo() {
 
     await axios.post('/api/genrate-audio', { text: script, id: id }).then(resp => {
       setAudioFileUrl(resp.data.result);
+      setVideoData(prev => ({
+        ...prev,
+        'audiofile': resp.data.result
+      }))
       GenrateAudioCaption(resp.data.result);
     }
     )
@@ -73,15 +87,43 @@ function CreateNewVideo() {
   }
 
   const GenrateAudioCaption = async (fileUrl) => {
+    try {
+      setGenrationSatus('Generating captions');
+
+      const resp = await axios.post('/api/genrate-caption', { audioFileUrl: fileUrl });
+
+
+      const captiondata = resp.data.Result;
+
+      setCaptions(captiondata);
+
+      setVideoData(prev => ({
+        ...prev,
+        'audiocaptions': captiondata
+      }));
+
+      GenrateImage();
+    } catch (error) {
+      console.error('Error generating captions:', error);
+    }
+  };
+
+
+  {/* const GenrateAudioCaption = async (fileUrl) => {
 
     setGenrationSatus('Genrating captions')
     await axios.post('/api/genrate-caption', { audioFileUrl: fileUrl }).then(resp => {
-      console.log(resp.data)
-      setCaptions(resp?.data?.result)
+      const captiondata = resp.data.result;
+      setCaptions(captiondata)
+      console.log(captiondata)
+      setVideoData(prev=>({
+        ...prev,
+        'videoScript':captions
+      }))
       GenrateImage();
     })
 
-  }
+  }*/}
 
   const GenrateImage = () => {
 
@@ -90,15 +132,54 @@ function CreateNewVideo() {
     setGenrationSatus('Genrating audio')
 
     videoScript.forEach(async (element) => {
+      //try{
       await axios.post('/api/genrate-images', {
         prompt: element.imagePrompt,
       }).then(resp => {
         images.push(resp.data.result)
       })
-      setImageList(images)
-      
+      //}
+      //catch(e){
+      console.log({ 'error': e })
+      //}
+      setVideoData(prev => ({
+        ...prev,
+        'images': images
+      }))
     })
+    setImageList(images)
     setLoading(false);
+  }
+
+  useEffect(() => {
+      if (!videoData || typeof videoData !== "object") {
+    console.warn("videoData is undefined or null", videoData);
+    return;
+  }
+
+    console.log(videoData);
+
+    if (Object.keys(videoData).length == 3) {
+      saveVideoData(videoData);
+    }
+  }, [videoData]);
+
+
+
+  const saveVideoData = async (VideoData) => {
+    setLoading(true)
+    setGenrationSatus('Making video')
+
+    const result = await db.insert(VideoData).values({
+      script: videoData?.videoScript,
+      audioFileUrl: videoData?.audiofile,
+      captions: videoData?.audiocaptions,
+      imageList: videoData?.imageList,
+      createdBy: user?.primaryEmailAddress?.emailAddress
+    }).returning({ id: VideoData?.id });
+
+    console.log(result);
+    setLoading(false)
   }
 
   return (
@@ -119,7 +200,7 @@ function CreateNewVideo() {
       </div>
 
 
-      <CustomLoading loading={loading} setLoading={setLoading} status={genrationStatus}/>
+      <CustomLoading loading={loading} setLoading={setLoading} status={genrationStatus} />
     </div>
   )
 }
